@@ -10,13 +10,6 @@
 ///     - -- OPOSITE
 ///
 
-int sizeOf(char* formula){
-    int i = 0, count =0;
-    while(formula[i] != '\n'){ formula[i] != ' ' && formula[i] != '\''? count++:count;
-        i++;
-    }
-    return count;
-}
 
 char* decimalToBinary(int n, size_t size) {
     char* variables = calloc(size+1, sizeof(char));
@@ -47,12 +40,15 @@ char* decimalToBinary(int n, size_t size) {
 
 
 
-void create_row(char* formula, char *variable_values, int size, int noOfVars){
+void create_row(char* formula, char *variable_values, int size, int no_of_vars){
     char *stack = calloc((size_t) size, sizeof(int));
-    int i = 0, top = -1, new_var = 0;
+    int i = 0, top = -1, new_var = 0, valid = 1;
     char next_char;
-    for (int j = 0; j < noOfVars; ++j) { j == noOfVars-1 ? printf("%c : ", variable_values[j]):printf("%c ", variable_values[j]); }
-    while(formula[i] != '\0'){
+    for (int j = 0; j < no_of_vars; ++j) {
+        j == no_of_vars-1 ? printf("%c :\t", variable_values[j]):printf("%c ", variable_values[j]);
+    }
+
+    while(formula[i] != '\0' && valid ==1){
         next_char = formula[i];
         if((next_char>='a' && next_char<='z')||next_char == '0' || next_char == '1') {
             new_var = 1;
@@ -66,34 +62,63 @@ void create_row(char* formula, char *variable_values, int size, int noOfVars){
             switch(next_char) {
                 case ('|'):
                     top++;
-                    (num1 | num2) == 0 ? (stack[top] = '0'):(stack[top] = '1');
-                    new_var == 1 ? printf(" %d", stack[top]-'0'): printf("%d", stack[top]-'0') ;
-
+                    if(top>=-1) {
+                        (num1 | num2) == 0 ? (stack[top] = '0') : (stack[top] = '1');
+                        new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
+                    }else {
+                        printf("Error in formula");
+                        valid = 0;
+                    }
                     break;
                 case ('&'):
                     top++;
-                    (num1 & num2) == 0 ? (stack[top] = '0'):(stack[top] = '1');
-                    new_var == 1 ? printf(" %d", stack[top]-'0'): printf("%d", stack[top]-'0') ;
+                    if(top>=0) {
+                        (num1 & num2) == 0 ? (stack[top] = '0'):(stack[top] = '1');
+                        new_var == 1 ? printf(" %d", stack[top]-'0'): printf("%d", stack[top]-'0');
+                    }else {
+                        printf("Error in formula");
+                        valid = 0;
+                    }
                     break;
                 case ('#'):
                     top++;
-                    (num1 ^ num2) == 0 ? (stack[top] = '0'):(stack[top] = '1');
-                    new_var == 1 ? printf(" %d", stack[top]-'0'): printf("%d", stack[top]-'0') ;
+                    if(top>=0) {
+                        (num1 ^ num2) == 0 ? (stack[top] = '0'):(stack[top] = '1');
+                        new_var == 1 ? printf(" %d", stack[top]-'0'): printf("%d", stack[top]-'0');
+                    }else {
+                        printf("Error in formula");
+                        valid = 0;
+                    }
                     break;
                 case ('='):
                     top++;
-                    (num1 == num2) == 0 ? (stack[top] = '0'):(stack[top] = '1');
-                    new_var == 1 ? printf(" %d", stack[top]-'0'): printf("%d", stack[top]-'0') ;
+                    if(top>=0) {
+                        (num1 == num2) == 0 ? (stack[top] = '0'):(stack[top] = '1');
+                        new_var == 1 ? printf(" %d", stack[top]-'0'): printf("%d", stack[top]-'0');
+                    }else {
+                        printf("Error in formula");
+                        valid = 0;
+                    }
                     break;
                 case ('>'):
                     top++;
-                    (num1 == num2 || (num1 ==0 && num2 ==1)) == 0 ? (stack[top] = '0'):(stack[top] = '1');
-                    new_var == 1 ? printf(" %d", stack[top]-'0'): printf("%d", stack[top]-'0') ;
+                    if(top>=0) {
+                        (num1 == num2 || (num1 ==0 && num2 ==1)) == 0 ? (stack[top] = '0'):(stack[top] = '1');
+                        new_var == 1 ? printf(" %d", stack[top]-'0'): printf("%d", stack[top]-'0');
+                    }else {
+                        printf("Error in formula");
+                        valid = 0;
+                    }
                     break;
                 case ('-'):
                     top+=2;
-                    num2 == 0 ? (stack[top] = '1') : (stack[top] = '0');
-                    new_var == 1 ? printf(" %d", stack[top]-'0'): printf("%d", stack[top]-'0') ;
+                    if(top>=0) {
+                        num2 == 0 ? (stack[top] = '1') : (stack[top] = '0');
+                        new_var == 1 ? printf(" %d", stack[top]-'0'): printf("%d", stack[top]-'0');
+                    }else {
+                        printf("Error in formula");
+                        valid = 0;
+                    }
                     break;
                 default:
                     top+=2;
@@ -104,78 +129,51 @@ void create_row(char* formula, char *variable_values, int size, int noOfVars){
         i++;
 
     }
-    printf(": %c", stack[top]);
+    top == 0 ? printf("\t:\t%c ", stack[top]) : printf("Too many values");
+    free(stack);
 
 }
 
-int main() {
-    int noOfVars;
-    scanf("%d", &noOfVars);
-    char *input = NULL;     /* input buffer, NULL forces getline to allocate */
-    size_t n = 0;           /* maximum characters to read (0 - no limit      */
-    getline (&input, &n, stdin);
-    for(int i = 97; i <97+noOfVars; i++){ printf("%c ", i); }
+void print_header(int no_of_vars, char* formula) {
+    for (int i = 97; i < 97 + no_of_vars; i++) { printf("%c ", i); }
     printf(":\t");
-    int k =0;
-    while(input[k] != '\n'){
-        if(input[k] !=' ' && input[k] != '\'')
-            printf("%c", input[k]);
+    int k = 0;
+    while (formula[k] != '\n') {
+        if ((int) formula[k] > 0 && (int) formula[k] < 197)
+            printf("%c", formula[k]);
         k++;
     }
     printf(": Result\n");
-    for(int i = 0; i <(noOfVars*2)+k-3+2+6+3;i++){
+    for (int i = 0; i < (no_of_vars * 2) + k + 4; i++) {
         printf("=");
     }
     printf("\n");
+}
 
-    for (int i = 0; i < pow(2,noOfVars); ++i) {
-        char *bi = decimalToBinary(i, (size_t) noOfVars);
-        create_row(input, bi ,i, noOfVars);
+
+void process_table(int no_of_vars, char* formula ){
+    for (int i = 0; i < pow(2,no_of_vars); ++i) {
+        char *bi = decimalToBinary(i, (size_t) no_of_vars);
+        create_row(formula, bi ,i, no_of_vars);
         free(bi);
         printf("\n");
     }
-    free(input);
-    return 0;
 }
 
 
 
-
-///While boolean variable or constant read in
-///If operator hand in last valid    4 5 + 7 /
-
-
-
-
-
-
-
-//
-
-
-
-
-//    int rows = powOf(noOfVars);
-//    int increment = rows / 2;
-//    int val =0;
-//    for(int i = 0; i < noOfVars*rows; i+=rows){
-//        for (int j = 0; j < rows/increment; ++j) {
-//            for (int k = 0; k < increment; ++k) {
-//                printf(" %d", val);
-//            }
-//            val == 0 ? (val = 1) : (val = 0);
-//        }
-//        printf("\n");
-//        increment /= 2;
-//    }
-
-
-//int powOf(int n){
-//    int pow = 1;
-//    for (int i = 0, limit=n; i < limit; ++i) {
-//        pow *= 2;
-//    }
-//    return pow;
-//}
-
+int main() {
+    int no_of_vars;
+    scanf("%d", &no_of_vars);
+    if(no_of_vars > 0 && no_of_vars <27) {
+        char *formula = NULL;     /* input buffer, NULL forces getline to allocate */
+        size_t n = 0;           /* maximum characters to read (0 - no limit      */
+        getline(&formula, &n, stdin);
+        print_header(no_of_vars, formula);
+        process_table(no_of_vars, formula);
+        free(formula);
+    } else
+        printf("Too many variables");
+    return 0;
+}
 
