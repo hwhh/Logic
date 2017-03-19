@@ -8,7 +8,15 @@
 ///     > == IMPLICATION
 ///     = == EQUIVILANCE
 ///     - -- OPOSITE
-///
+
+//#define ASCII_START  97;
+
+int tautology = 1;
+int satisfiable = 0;
+int un_satisfiable = 1;
+int invalid = 0;
+
+
 int size_of(char* formula){
     int i = 0, count =0;
     while(formula[i] != '\n'){ formula[i]>=0&&formula[i]<=127? count++:count;
@@ -56,88 +64,57 @@ void create_row(char* formula, char *variable_values, int no_squared, int no_of_
         if((next_char>='a' && next_char<='z')||next_char == '0' || next_char == '1') {//If the token is a value
             //Push it onto the stack.
             new_var = 1;
-            //top++;
             stack[++top] = next_char;
         }else{//Otherwise, the token is an operator
-            if(top<0)
+            if(top<0) {
+                valid =0;
                 printf("Error in formula");
-            else {
+            }else {
                 int num1, num2;
                 //It is already known that the operator takes n arguments.
-                stack[top - 1] >= 97 ? (num1 = variable_values[(stack[top - 1] - 97)] - '0') : (num1 = stack[top - 1] -
-                                                                                                       '0');
+                stack[top - 1] >= 97 ? (num1 = variable_values[(stack[top - 1] - 97)] - '0') : (num1 = stack[top - 1] - '0');
                 stack[top] >= 97 ? (num2 = variable_values[(stack[top] - 97)] - '0') : (num2 = stack[top] - '0');
                 top -= 2;
                 switch (next_char) {
                     case ('|'):
-                        //top++;
-                        //if(top>=-1) {
                         (num1 | num2) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
                         new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
                         break;
                     case ('&'):
-                        //top++;
-                        // if(top>=-1) {
                         (num1 & num2) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
                         new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
-                        //                    }else {
-                        //                        printf("Error in formula");
-                        //                        valid = 0;
-                        //                    }
                         break;
                     case ('#'):
-                        //top++;
-                        //if(top>=-1) {
                         (num1 ^ num2) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
                         new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
-                        //                    }else {
-                        //                        printf("Error in formula");
-                        //                        valid = 0;
-                        //                    }
                         break;
                     case ('='):
-                        //top++;
-                        //if(top>=-1) {
                         (num1 == num2) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
                         new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
-                        //                    }else {
-                        //                        printf("Error in formula");
-                        //                        valid = 0;
-                        //                    }
                         break;
                     case ('>'):
-                        //top++;
-                        //if(top>=-1) {
                         (num1 == num2 || (num1 == 0 && num2 == 1)) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
                         new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
-                        //                    }else {
-                        //                        printf("Error in formula");
-                        //                        valid = 0;
-                        //                    }
                         break;
                     case ('-'):
                         top++;
-                        //if(top>=0) {
                         num2 == 0 ? (stack[++top] = '1') : (stack[++top] = '0');
                         new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
-                        //                    }else {
-                        //                        printf("Error in formula");
-                        //                        valid = 0;
-                        //                    }
                         break;
                     default:
                         top += 2;
                         break;
                 }
             }
-
-
             new_var = 0;
         }
         i++;
 
     }
-
+    if(stack[top] == '0' && tautology == 1) tautology = 0;
+    if(stack[top] == '0' && invalid == 0) invalid = 1;
+    if(stack[top] == '1' && satisfiable == 0) satisfiable = 1;
+    if(stack[top] == '1' && un_satisfiable == 1) un_satisfiable = 0;
     top == 0 ?  printf("\t:\t%c ", stack[top]) : printf("\tToo many values");
     free(stack);
 }
@@ -216,9 +193,7 @@ void print_header(int no_of_vars, char* formula) {
         k++;
     }
     printf(": Result\n");
-    for (int i = 0; i < (no_of_vars * 2) + chars + 10; i++) {
-        printf("=");
-    }
+    for (int i = 0; i < (no_of_vars * 2) + chars + 10; i++) { printf("="); }
     printf("\n");
 }
 
@@ -232,6 +207,13 @@ void process_table(int no_of_vars, char* formula ){
     }
 }
 
+void print_forumla_type(){
+    printf("Formula is: ");
+    if (tautology == 1)printf("a tautology and is satisfiable");
+    if (tautology == 0 && satisfiable ==1)printf("satisfiable but invalid");
+    if (un_satisfiable == 1)printf("un-satisfiable and invalid");
+}
+
 int main() {
     int no_of_vars;
     scanf("%d", &no_of_vars);
@@ -240,18 +222,12 @@ int main() {
         size_t n = 0;           /* maximum characters to read (0 - no limit      */
         getline(&in_formula, &n, stdin);
         char *formula = create_rpn_formula(in_formula, size_of(in_formula));
-
         print_header(no_of_vars, formula);
         process_table(no_of_vars, formula);
         free(formula);
+        print_forumla_type();
     } else
         printf("Too many variables");
     return 0;
 }
 
-//There are three people of different ages, called Ian, Steve and Chris.
-//Either Chris or Steve is the oldest.
-//Either Ian is the oldest or Chris is the youngest.
-//Who is the oldest, who is in the middle, and who is the youngest?
-
-///ab|
