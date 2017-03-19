@@ -15,6 +15,7 @@ int tautology = 1;
 int satisfiable = 0;
 int un_satisfiable = 1;
 int invalid = 0;
+int valid = 1;
 
 
 int size_of(char* formula){
@@ -54,7 +55,7 @@ char* decimal_to_binary(int n, size_t size) {
 
 void create_row(char* formula, char *variable_values, int no_squared, int no_of_vars){
     char *stack = calloc((size_t) no_squared, sizeof(int));
-    int i = 0, top = -1, new_var = 0, valid = 1;
+    int i = 0, top = -1, new_var = 0;
     char next_char;
     for (int j = 0; j < no_of_vars; ++j) {
         j == no_of_vars-1 ? printf("%c :\t", variable_values[j]):printf("%c ", variable_values[j]);
@@ -182,6 +183,7 @@ char* create_rpn_formula(char* formula, int no_of_vars) {
 }
 
 void print_header(int no_of_vars, char* formula) {
+    printf("\n");
     for (int i = 97; i < 97 + no_of_vars; i++) { printf("%c ", i); }
     printf(": ");
     int k = 0, chars = 0;
@@ -200,6 +202,10 @@ void print_header(int no_of_vars, char* formula) {
 void process_table(int no_of_vars, char* formula ){
     int no_squared = (int) pow(2, no_of_vars);
     for (int i = 0; i < no_squared; ++i) {
+        if(valid == 0) {
+            printf("Stopping");
+            break;
+        }
         char *bi = decimal_to_binary(i, (size_t) no_of_vars);
         create_row(formula, bi, no_squared, no_of_vars );
         free(bi);
@@ -208,26 +214,118 @@ void process_table(int no_of_vars, char* formula ){
 }
 
 void print_forumla_type(){
-    printf("Formula is: ");
+    if(valid == 0)
+        return;
+    printf("\nFormula is: ");
     if (tautology == 1)printf("a tautology and is satisfiable");
     if (tautology == 0 && satisfiable ==1)printf("satisfiable but invalid");
     if (un_satisfiable == 1)printf("un-satisfiable and invalid");
+
+}
+
+void menu(){
+    int choice = -1,  no_of_vars = -1;
+    printf("1. 1 input string in postfix\n2. 1 input string infix\n3. 2 input string in postfix\n4. 2 input string infix\n\nPlease input choice: ");
+    scanf("%d", &choice);
+    fpurge(stdin);
+    if(choice > 0 && choice <= 4) {
+        char *in_formula_1_postfix = NULL, *in_formula_2_postfix = NULL, *in_formula_1_infix = NULL, *in_formula_2_infix = NULL;
+        size_t n = 0;
+        printf("Input number of propositional variables: ");
+        scanf("%d", &no_of_vars);
+        fpurge(stdin);
+        if (no_of_vars >= 1 && no_of_vars <= 27) {
+            switch (choice) {
+                case (1):
+                    printf("Input formula in postfix: ");
+                    getline(&in_formula_1_postfix, &n, stdin);
+                    print_header(no_of_vars, in_formula_1_postfix);
+                    process_table(no_of_vars, in_formula_1_postfix);
+                    print_forumla_type();
+                    break;
+                case (2):
+                    printf("Input formula in infix: ");
+                    getline(&in_formula_1_infix, &n, stdin);
+                    in_formula_1_infix = create_rpn_formula(in_formula_1_infix, size_of(in_formula_1_infix));
+                    print_header(no_of_vars, in_formula_1_infix);
+                    process_table(no_of_vars, in_formula_1_infix);
+                    print_forumla_type();
+                    break;
+                case (3):
+                    printf("Input first formula in postfix: ");
+                    getline(&in_formula_1_postfix, &n, stdin);
+                    printf("Input second formula in postfix: ");
+                    getline(&in_formula_2_postfix, &n, stdin);
+
+                    print_forumla_type();
+                    break;
+                case (4):
+                    printf("Input first formula in infix: ");
+                    getline(&in_formula_1_infix, &n, stdin);
+                    in_formula_1_infix = create_rpn_formula(in_formula_1_infix, size_of(in_formula_1_infix));
+                    printf("Input second formula in infix: ");
+                    getline(&in_formula_2_infix, &n, stdin);
+                    in_formula_2_infix = create_rpn_formula(in_formula_2_infix, size_of(in_formula_2_infix));
+
+                    print_forumla_type();
+                    break;
+                default:
+                    break;
+            }
+            free(in_formula_1_postfix);
+            free(in_formula_2_postfix);
+            free(in_formula_1_infix);
+            free(in_formula_2_infix);
+
+        } else
+            printf("Too many variables");
+    } else
+        printf("bad input");
+
 }
 
 int main() {
-    int no_of_vars;
-    scanf("%d", &no_of_vars);
-    if(no_of_vars > 0 && no_of_vars <27) {
-        char *in_formula = NULL;     /* input buffer, NULL forces getline to allocate */
-        size_t n = 0;           /* maximum characters to read (0 - no limit      */
-        getline(&in_formula, &n, stdin);
-        char *formula = create_rpn_formula(in_formula, size_of(in_formula));
-        print_header(no_of_vars, formula);
-        process_table(no_of_vars, formula);
-        free(formula);
-        print_forumla_type();
-    } else
-        printf("Too many variables");
+//    int bytes_read;
+//    int nbytes = 100;
+//    char *my_string;
+//    int no_of_vars;
+//    printf("Input number of variables: ");
+//    scanf("%d", &no_of_vars);
+//    printf ("Please enter a line of text.");
+//
+//    /* These 2 lines are the heart of the program. */
+//    char *in_formula = NULL;
+//    getline (&in_formula, &nbytes, stdin);
+//    printf ("You typed:");
+//    printf ("%d\n", no_of_vars);
+//    printf (in_formula);
+menu();
+
+    return 0;
+//    int no_of_vars;
+//    printf("Input number of variables: ");
+//    scanf("%d\n", &no_of_vars);
+//    char *in_formula = NULL;    /* input buffer, NULL forces getline to allocate */
+//    size_t n = 0;               /* maximum characters to read (0 - no limit      */
+//    getline(&in_formula, &n, stdin);
+//    printf("%s", in_formula);
+
+      menu();
+//    int no_of_vars;
+//    scanf("%d", &no_of_vars);
+//    if(no_of_vars > 0 && no_of_vars <27) {
+//        char *in_formula = NULL;    /* input buffer, NULL forces getline to allocate */
+//        size_t n = 0;               /* maximum characters to read (0 - no limit      */
+//        getline(&in_formula, &n, stdin);
+//        char *formula = create_rpn_formula(in_formula, size_of(in_formula));
+//        print_header(no_of_vars, formula);
+//        process_table(no_of_vars, formula);
+//        free(formula);
+//        print_forumla_type();
+//    } else
+//        printf("Too many variables");
     return 0;
 }
 
+
+//
