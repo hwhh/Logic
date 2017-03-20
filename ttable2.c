@@ -53,12 +53,12 @@ char* decimal_to_binary(int n, size_t size) {
 //(Error) The user input has too many values.
 
 
-void create_row(char* formula, char *variable_values, int no_squared, int no_of_vars){
+char create_row(char* formula, char *variable_values, int no_squared, int no_of_vars, int print){
     char *stack = calloc((size_t) no_squared, sizeof(int));
     int i = 0, top = -1, new_var = 0;
     char next_char;
     for (int j = 0; j < no_of_vars; ++j) {
-        j == no_of_vars-1 ? printf("%c :\t", variable_values[j]):printf("%c ", variable_values[j]);
+        j == no_of_vars-1  && print == 1 ? printf("%c :\t", variable_values[j]):printf("%c ", variable_values[j]);
     }
     while(formula[i] != '\0' && valid ==1){//While there are input tokens left
         next_char = formula[i];
@@ -79,28 +79,28 @@ void create_row(char* formula, char *variable_values, int no_squared, int no_of_
                 switch (next_char) {
                     case ('|'):
                         (num1 | num2) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
-                        new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
+                        new_var == 1 && print == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
                         break;
                     case ('&'):
                         (num1 & num2) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
-                        new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
+                        new_var == 1 && print == 1 ?printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
                         break;
                     case ('#'):
                         (num1 ^ num2) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
-                        new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
+                        new_var == 1 && print == 1 ?printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
                         break;
                     case ('='):
                         (num1 == num2) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
-                        new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
+                        new_var == 1 && print == 1 ?printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
                         break;
                     case ('>'):
                         (num1 == num2 || (num1 == 0 && num2 == 1)) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
-                        new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
+                        new_var == 1 && print == 1 ?printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
                         break;
                     case ('-'):
                         top++;
                         num2 == 0 ? (stack[++top] = '1') : (stack[++top] = '0');
-                        new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
+                        new_var == 1 && print == 1 ?printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
                         break;
                     default:
                         top += 2;
@@ -116,10 +116,31 @@ void create_row(char* formula, char *variable_values, int no_squared, int no_of_
     if(stack[top] == '0' && invalid == 0) invalid = 1;
     if(stack[top] == '1' && satisfiable == 0) satisfiable = 1;
     if(stack[top] == '1' && un_satisfiable == 1) un_satisfiable = 0;
-    top == 0 ?  printf("\t:\t%c ", stack[top]) : printf("\tToo many values");
+    top == 0 && print == 1 ?  printf("\t:\t%c ", stack[top]) : printf("\tToo many values");
+    char res = stack[top];
     free(stack);
+    return res;
 }
 
+
+int check_equivilance(int no_of_vars_1, int no_of_vars_2, char* formula_1, char* formula_2){
+    if(no_of_vars_1 != no_of_vars_2)
+        return 0;
+    int no_squared = (int) pow(2, no_of_vars_1);
+    for (int i = 0; i < no_squared; ++i) {
+        if(valid == 0) {
+            printf("Stopping");
+            return 0;
+        }
+        char *bi = decimal_to_binary(i, (size_t) no_of_vars_1);
+        int res1 = create_row(formula_1, bi, no_squared, no_of_vars_1, 0);
+        int res2 = create_row(formula_2, bi, no_squared, no_of_vars_2, 0);
+        if(res1 != res2)
+            return 0;
+        free(bi);
+    }
+    return 1;
+}
 
 int check_char(char input){
     return input == '|' || input == '&' || input == '#' || input == '-' || input == '=' || input == '>' ? 1 : 0;
@@ -207,7 +228,7 @@ void process_table(int no_of_vars, char* formula ){
             break;
         }
         char *bi = decimal_to_binary(i, (size_t) no_of_vars);
-        create_row(formula, bi, no_squared, no_of_vars );
+        create_row(formula, bi, no_squared, no_of_vars, 1);
         free(bi);
         printf("\n");
     }
@@ -230,7 +251,7 @@ void menu(){
     printf("1. 1 input string in postfix\n2. 1 input string infix\n3. 2 input string in postfix\n4. 2 input string infix\n\nPlease input choice: ");
     scanf("%d", &choice);
     fpurge(stdin);
-
+    
 
 
     if(choice > 0 && choice <= 4) {
