@@ -1,0 +1,21 @@
+To run basic: first argument is the number of proportional variables and the second is the input forumla. e.g.
+
+                        .\ttable <no_of_vars> <formula>
+
+To run the extension: first argument is the number of proportional variables and the second is the input forumla,
+                      the second argument can be either a function name or a formula. Note that if using two input formulas,
+                      you must put the second formula as the third program argument, otherwise it can be a function name followed by more
+                      function names e.g.
+
+                         .\ttable <no_of_vars> <formula_1> <formula_2(optional)> <function names>....
+
+
+
+process_table_1
+process_table_2 -- used to process second formula
+compare
+logic_solver_1
+logic_solver_2 -- used to process second formula
+check_equivilance
+print_forumla_type_1
+print_forumla_type_2 -- used to process second formula
