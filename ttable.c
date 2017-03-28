@@ -322,9 +322,9 @@ char *shunting_yard(char *formula) {
             while(stack[stack_pointer] != '('){
                 queue[++queue_back]=stack[stack_pointer--];
                 if(stack_pointer == -1) {
-                    printf("mismatched parentheses");
+                    printf("Mismatched parentheses in input forumla");
                     valid = 0;
-                    break;
+                    exit(0);
                 }
 
             }
@@ -337,8 +337,8 @@ char *shunting_yard(char *formula) {
     //When there are no more tokens to read and there are operators on the stack
     while(stack_pointer > -1){
         if(stack[stack_pointer] == ')' || stack[stack_pointer] == '(') {
-            printf("mismatched parentheses");
-            break;
+            printf("Mismatched parentheses in input forumla");
+            exit(0);
         }
         //Pop the operator onto the output queue
         queue[++queue_back]=stack[stack_pointer--];
