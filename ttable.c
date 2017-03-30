@@ -8,19 +8,11 @@ int tautology = 1, satisfiable = 0, un_satisfiable = 1, invalid = 0;
 ///If formula is invalid
 int valid = 1, ignored;
 
-///Raise number to power of 2
-int pow_2(int n) {
-    int pow = 1;
-    for (int i = 0, limit = n; i < limit; ++i) {
-        pow *= 2;
-    }
-    return pow;
-}
 
-///Calculate number of character 'a'..'z' in input string
+///Calculate number of characters in input string
 int size_of(char *formula) {
     int count = 0;
-    //If the value is a character 'a'..'z' increment i
+    //If the value is a character increment i
     while (*formula) {
         if (*formula == '\'') {
             ignored = *formula++;
@@ -59,41 +51,34 @@ int no_of_p_vars(char *formula) {
     return count;
 }
 
-//int i = 0;
-//Loop over characters in formula
-//    while (*formula) {
-//        //If character in range 'a'..'z' increment counter
-//        if ((int) *formula >= 97 && (int) *formula <= 122)
-//            i++;
-//        ignored = *formula++;
-//    }
-
 ///Print a row of the truth table
 char create_row(char *formula, char *variable_values, int no_of_vars, int print) {
     //Create the stack
     char *stack = calloc((size_t) size_of(formula), sizeof(int));
-    int top = -1, new_var = 0;
+    int top = -1, space_count = 0;
     char next_char;
     //Print out the values of the propositional variables
     for (int j = 0; j < no_of_vars; ++j) {
         if (print == 1)
-            j == no_of_vars - 1 ? printf("%c :\t", variable_values[j]) : printf("%c ", variable_values[j]);
+            j == no_of_vars - 1 ? printf("%c : ", variable_values[j]) : printf("%c ", variable_values[j]);
     }
     //While there are input tokens left
-    while (*formula && valid == 1) {
+    while (*formula) {
         //Read the next token
         next_char = *formula;
         //If the token is a propositional variable or a constant
         if ((next_char >= 'a' && next_char <= 'z') || next_char == '0' || next_char == '1') {
             //Push it onto the stack.
-            new_var = 1;
+            space_count++;
             stack[++top] = next_char;
+            if (print == 1)
+                printf(" ");
             //Otherwise, the token is an operator
         } else {
             //If the stack pointer is negative there are not enough variables on the stack
             if(top<0) {
-                valid =0;
                 printf("Error in formula");
+                exit(-1);
             }else {
                 int num1, num2;
                 //Get the top to values on the stack, if there an character, deduct 97 and use value as index
@@ -105,33 +90,34 @@ char create_row(char *formula, char *variable_values, int no_of_vars, int print)
                     case ('|'):
                         (num1 | num2) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
                         if (print == 1)
-                            new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
+                            printf("%d", stack[top] - '0');
                         break;
                     case ('&'):
                         (num1 & num2) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
                         if (print == 1)
-                            new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
+                            printf("%d", stack[top] - '0');
                         break;
                     case ('#'):
                         (num1 ^ num2) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
                         if (print == 1)
-                            new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
+                            printf("%d", stack[top] - '0');
                         break;
                     case ('='):
                         (num1 == num2) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
                         if (print == 1)
-                            new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
+                            printf("%d", stack[top] - '0');
                         break;
                     case ('>'):
                         (num1 == num2 || (num1 == 0 && num2 == 1)) == 0 ? (stack[++top] = '0') : (stack[++top] = '1');
                         if (print == 1)
-                            new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
+                            printf("%d", stack[top] - '0');
+
                         break;
                     case ('-'):
                         top++;
                         num2 == 0 ? (stack[++top] = '1') : (stack[++top] = '0');
                         if (print == 1)
-                            new_var == 1 ? printf(" %d", stack[top] - '0') : printf("%d", stack[top] - '0');
+                            printf("%d", stack[top] - '0');
                         break;
                     default:
                         //Catch invalid characters in input formula
@@ -139,7 +125,6 @@ char create_row(char *formula, char *variable_values, int no_of_vars, int print)
                         break;
                 }
             }
-            new_var = 0;
         }
         ignored = *formula++;
     }
@@ -150,11 +135,16 @@ char create_row(char *formula, char *variable_values, int no_of_vars, int print)
     if(stack[top] == '1' && un_satisfiable == 1) un_satisfiable = 0;
 
     //Check if the stack pointer is 0 after calculations finished
-    if (top != 0)
-        printf("\tToo many values");
 
-    else if (print == 1)
-        printf("\t:\t%c ", stack[top]);
+    if (top != 0) {
+        printf("\t\nInvalid formula");
+        exit(-1);
+    }
+    if (stack[top] != '0' && stack[top] != '1')
+        (variable_values[(stack[top] - 97)] & 1) == 1 ? (stack[top] = '1') : (stack[top] = '0');
+    if (print == 1) {
+        printf(" :   %c ", stack[top]);
+    }
 
     //Return the result
     char res = stack[top];
@@ -177,25 +167,27 @@ void print_header(int no_of_vars, char *formula) {
         }
         ignored = *formula++;
     }
-    printf(": Result\n");
+    printf(" : Result\n");
     //Print correct number of "="
-    for (int i = 0; i < (no_of_vars * 2) + chars + 10; i++) { printf("="); }
+    for (int i = 0; i < (no_of_vars * 2) + chars + 11; i++) { printf("="); }
     printf("\n");
 }
 
 ///Takes in two input formula and print out only the lines where the first one is true
 void compare(int no_of_vars_1, int no_of_vars_2, char *formula_1, char *formula_2) {
-    printf("\n\tCOMPARE\t\n");
     //Check correct number of propositional variables
-    if (no_of_vars_1 != no_of_vars_2)
-        return;
+    if (no_of_vars_1 != no_of_vars_2) {
+        printf("\nInvalid formula");
+        exit(-1);
+    }
     //Calculate total number of combinations
+    printf("\n\tCOMPARE\t\n");
     int no_squared = (int) pow(2, no_of_vars_1);
     print_header(no_of_vars_1, formula_2);
     for (int i = 0; i < no_squared; ++i) {
         if (valid == 0) {
-            printf("Invalid formula");
-            return;
+            printf("\nInvalid formula");
+            exit(-1);
         }
         //Calculate values for propositional variables
         char *bi = decimal_to_binary(i, (size_t) no_of_vars_1);
@@ -217,7 +209,7 @@ void logic_solver(int no_of_vars, char *formula) {
     int no_squared = (int) pow(2, no_of_vars);
     for (int i = 0; i < no_squared; ++i) {
         if (valid == 0) {
-            printf("Invalid formula");
+            printf("\nInvalid formula");
             return;
         }
         //Calculate values for propositional variables
@@ -239,17 +231,19 @@ void logic_solver(int no_of_vars, char *formula) {
 }
 
 ///Check if two formula produce the same result
-void check_equivilance(int no_of_vars_1, int no_of_vars_2, char *formula_1, char *formula_2) {
+void check_equivalence(int no_of_vars_1, int no_of_vars_2, char *formula_1, char *formula_2) {
     //Check correct number of propositional variables
+    if (no_of_vars_1 != no_of_vars_2) {
+        printf("\nInvalid formula");
+        exit(-1);
+    }
     printf("\n\tCHECK EQUIVILANCE\n");
-    if(no_of_vars_1 != no_of_vars_2)
-        return;
     //Calculate total number of combinations
     int no_squared = (int) pow(2, no_of_vars_1);
     for (int i = 0; i < no_squared; ++i) {
         if(valid == 0) {
             printf("Invalid input forumla\n");
-            return;
+            exit(-1);
         }
         //Calculate values for propositional variables
         char *bi = decimal_to_binary(i, (size_t) no_of_vars_1);
@@ -263,8 +257,7 @@ void check_equivilance(int no_of_vars_1, int no_of_vars_2, char *formula_1, char
         }
         free(bi);
     }
-    printf("\n%s and %s are equivalent\n", formula_1, formula_2);
-    return;
+    printf("\n\'%s\' and \'%s\' are equivalent\n", formula_1, formula_2);
 }
 
 ///Check if input char is operator
@@ -291,10 +284,10 @@ char *shunting_yard(char *formula) {
     //Create stack and queue
     char *queue = calloc((size_t) size_of(formula) + 1, sizeof(char));
     char *stack = calloc((size_t) size_of(formula) + 1, sizeof(char));
-    int stack_pointer = -1, queue_back = -1, valid = 1;
+    int stack_pointer = -1, queue_back = -1;
     char next_char;
     //While there are tokens to be read
-    while (*formula && valid == 1) {
+    while (*formula) {
         //Read next token
         next_char = *formula;
         //If the token is a propositional variable or a constant push it onto queue
@@ -323,8 +316,7 @@ char *shunting_yard(char *formula) {
                 queue[++queue_back]=stack[stack_pointer--];
                 if(stack_pointer == -1) {
                     printf("Mismatched parentheses in input forumla");
-                    valid = 0;
-                    exit(0);
+                    exit(-1);
                 }
 
             }
@@ -338,7 +330,7 @@ char *shunting_yard(char *formula) {
     while(stack_pointer > -1){
         if(stack[stack_pointer] == ')' || stack[stack_pointer] == '(') {
             printf("Mismatched parentheses in input forumla");
-            exit(0);
+            exit(-1);
         }
         //Pop the operator onto the output queue
         queue[++queue_back]=stack[stack_pointer--];
@@ -368,11 +360,13 @@ void process_table(int no_of_vars, char *formula, int print) {
 
 ///Print the formula type
 void print_forumla_type(char *forumla) {
-    printf("\n\tFORUMLA TYPE");
-    //Check if forula is valid
+    //Check if formula is valid
     process_table(no_of_p_vars(forumla), forumla, 0);
-    if(valid == 0)
-        return;
+    if (valid == 0) {
+        printf("Invalid input forumla");
+        exit(-1);
+    }
+    printf("\n\tFORUMLA TYPE");
     printf("\nFormula \'%s\': ", forumla);
     if (tautology == 1)printf("a tautology and is satisfiable\n");
     if (tautology == 0 && satisfiable == 1)printf("is satisfiable but invalid\n");
@@ -381,9 +375,9 @@ void print_forumla_type(char *forumla) {
 }
 
 ///Get the forumla from the program arguments
-char *parse_formula(int no_of_vars, char *input_string) {
-    int count = 0;
-    char *formula = calloc((size_t) size_of(input_string) + 1, sizeof(char));
+char *parse_formula(char *input_string) {
+    int count = 0, size = size_of(input_string);
+    char *formula = calloc((size_t) size + 1, sizeof(char));
     while (*input_string) {
         //If it a quote mark skip
         if (*input_string == '\'') {
@@ -406,9 +400,11 @@ int check_argument(char *arg) {
         return 1;
     else if (strncmp(arg, "logic_solver", 12) == 0)
         return 1;
-    else if (strncmp(arg, "check_equivilance", 17) == 0)
+    else if (strncmp(arg, "check_equivalence", 17) == 0)
         return 1;
     else if (strncmp(arg, "print_forumla_type", 18) == 0)
+        return 1;
+    else if (strncmp(arg, "process_table", 13) == 0)
         return 1;
     return 0;
 }
@@ -422,7 +418,7 @@ int main(int argc, char *argv[]) {
     }
     //Get the first argument
     int no_of_vars = atoi(argv[1]);
-    char *f1 = parse_formula(no_of_vars, argv[2]);
+    char *f1 = parse_formula(argv[2]);
     //If only no of propositional variables and function
     if (argc == 3) {
         print_header(no_of_vars, f1);
@@ -434,7 +430,7 @@ int main(int argc, char *argv[]) {
         int start = 3;
         //Check if third argument is function or forumla
         if (check_argument(argv[3]) != 1) {
-            f2 = parse_formula(no_of_vars, argv[3]);
+            f2 = parse_formula(argv[3]);
             start++;
         }
         //Call the functions in the program arguments
@@ -454,8 +450,8 @@ int main(int argc, char *argv[]) {
             else if (strcmp(argv[i], "logic_solver_2") == 0 && f2 != NULL)
                 logic_solver(no_of_p_vars(f2), f2);
 
-            else if (strcmp(argv[i], "check_equivilance") == 0 && f2 != NULL)
-                check_equivilance(no_of_p_vars(f1), no_of_p_vars(f2), f1, f2);
+            else if (strcmp(argv[i], "check_equivalence") == 0 && f2 != NULL)
+                check_equivalence(no_of_p_vars(f1), no_of_p_vars(f2), f1, f2);
 
             else if (strcmp(argv[i], "print_forumla_type_1") == 0)
                 print_forumla_type(f1);
